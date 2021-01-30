@@ -1,0 +1,23 @@
+{
+  "name": "clientes",
+  "version": "1.0.0",
+  "description": "cadastro de clientes",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guicdp7/clientes.git"
+  },
+  "author": "Guilherme Cristino",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/guicdp7/clientes/issues"
+  },
+  "homepage": "https://github.com/guicdp7/clientes#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "mongodb": "^3.6.3"
+  }
+}
