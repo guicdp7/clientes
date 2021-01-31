@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf8">
+    <title>CRUD de Clientes</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">CRUD de Clientes com Node.js e VUE.js</a>
+                </div>
+            </nav>
+        </header>
+        <div class="container">
+            <table v-if="!showForm" class="table pt-3">
+                <thead>
+                    <tr>
+                        <th>
+                            <button @click="onNewClick()" type="button" class="btn btn-success">Novo</button>
+                        </th>
+                        <th>Nome</th>
+                        <th>Gênero</th>
+                        <th>CPF</th>
+                        <th>Telefone</th>
+                        <th>E-mail</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item of clients" :key="item._id">
+                        <td>{{ formateDate(item.createdAt) }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.genre === 'M' ? 'Masculino' : ( item.genre === 'F' ? 'Feminino' : '') }}</td>
+                        <td>{{ item.cpf }}</td>
+                        <td>{{ item.phone }}</td>
+                        <td>{{ item.email }}</td>
+                        <td>
+                            <button @click="onEditClick(item)" type="button" class="btn btn-primary">Editar</button>
+                            <button @click="onDeleteClick(item)" type="button" class="btn btn-danger">Excluir</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <form v-if="showForm" ref="formClient" class="pt-3" @submit.prevent="onFormSubmit()">
+                <h4>{{ clientSelected ? 'Editar cliente' : 'Novo cliente' }}</h4>
+                <div class="mb-3">
+                    <label for="inputName" class="form-label">Nome</label>
+                    <input :disabled="sendingForm" type="text" class="form-control" name="name" id="inputName"
+                        :value="clientSelected ? clientSelected.name : ''">
+                </div>
+                <div class="form-check">
+                    <input :disabled="sendingForm" class="form-check-input" type="radio" value="M" name="genre"
+                        id="radM" :checked="clientSelected ? (clientSelected.genre === 'M' ? true : false) : false">
+                    <label class="form-check-label" for="radM">
+                        Gênero Masculino
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input :disabled="sendingForm" class="form-check-input" type="radio" value="F" name="genre"
+                        id="radF" :checked="clientSelected ? (clientSelected.genre === 'F' ? true : false) : false">
+                    <label class="form-check-label" for="radF">
+                        Gênero Feminino
+                    </label>
+                </div>
+                <div class="mb-3">
+                    <label for="inputCpf" class="form-label">CPF</label>
+                    <input :disabled="sendingForm" type="text" class="form-control" name="cpf" id="inputCpf" required
+                        :value="clientSelected ? clientSelected.cpf : ''">
+                </div>
+                <div class="mb-3">
+                    <label for="inputEmail" class="form-label">E-mail</label>
+                    <input :disabled="sendingForm" type="email" class="form-control" id="inputEmail" name="email"
+                        required :value="clientSelected ? clientSelected.email : ''">
+                </div>
+                <div class="mb-3">
+                    <label for="inputPhone" class="form-label">Telefone</label>
+                    <input :disabled="sendingForm" type="phone" class="form-control" id="inputPhone" name="phone"
+                        :value="clientSelected ? clientSelected.phone : ''">
+                </div>
+                <button :disabled="sendingForm" @click="onCancelClick()" type="button"
+                    class="btn btn-danger">Cancelar</button>
+                <button :disabled="sendingForm" type="submit" class="btn btn-primary">Enviar</button>
+            </form>
+        </div>
+    </div>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            var vueApp = new Vue({
+                el: '#app',
+                data: {
+                    sendingForm: false,
+                    showForm: false,
+                    clientSelected: null,
+                    apiUrl: location.href,
+                    clients: []
+                },
+                mounted: function () {
+                    this.getClients();
+                },
+                methods: {
+                    formateDate: function (date) {
+                        var dateObj = new Date(date);
+
+                        var day = dateObj.getDate();
+                        day = day < 10 ? '0' + day : day;
+
+                        var month = dateObj.getMonth() + 1;
+                        month = month < 10 ? '0' + month : month;
+
+                        var year = dateObj.getFullYear();
+                        year = year < 10 ? '0' + year : year;
+
+                        return day + '/' + month + '/' + year;
+                    },
+                    getClients: function () {
+                        this.request('GET', 'clients/getAll', undefined, (function clientsCallback(result) {
+                            this.clients = (result ? result.clients : undefined) || [];
+                        }).bind(this));
+                    },
+                    request: function (method, url, data, callback) {
+                        console.log('request');
+                        var req = new XMLHttpRequest();
+
+                        req.open(method, this.apiUrl + url);
+
+                        req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+                        req.onload = function readyStateChange() {
+                            var responseData;
+
+                            if (this.responseText) {
+                                try {
+                                    responseData = JSON.parse(this.responseText);
+                                }
+                                catch (e) {
+                                    responseData = this.responseText;
+                                }
+                            }
+
+                            if (typeof callback === 'function') {
+                                callback(responseData, this);
+                            }
+                        }
+
+                        req.send(data ? JSON.stringify(data) : undefined);
+                    },
+                    onCancelClick: function () {
+                        this.showForm = false;
+                    },
+                    onNewClick: function () {
+                        this.showForm = true;
+                        this.clientSelected = null;
+                    },
+                    onEditClick: function (item) {
+                        this.showForm = true;
+                        this.clientSelected = item;
+                    },
+                    onDeleteClick: function (item) {
+                        if (confirm('Deseja realmente excluir esse cliente?')) {
+                            this.request('DELETE', 'clients/deleteById/' + item._id, undefined, (function deleteCallback(result) {
+                                if (result && result.status) {
+                                    this.getClients();
+                                    alert('Cliente excluido com sucesso!');
+                                }
+                                else {
+                                    alert('Erro ao excluir, tente novamente mais tarde!');
+                                }
+                            }).bind(this));
+                        }
+                    },
+                    onFormSubmit: function () {
+                        var form = this.$refs['formClient'];
+
+                        var data = {
+                            name: form.name.value,
+                            cpf: form.cpf.value,
+                            email: form.email.value,
+                            phone: form.phone.value,
+                            genre: form.genre.value
+                        };
+
+                        this.sendingForm = true;
+                        if (this.clientSelected) {
+                            this.request("PUT", 'clients/editBaId/' + this.clientSelected._id, data, (function editCallback(result) {
+                                if (result && result._id) {
+                                    this.showForm = false;
+                                    this.clientSelected = null;
+                                    this.getClients();
+                                    alert('Cliente editado com sucesso!');
+                                }
+                                else {
+                                    alert('Erro ao editar, tente novamente mais tarde!');
+                                }
+                                this.sendingForm = false;
+                            }).bind(this));
+                        }
+                        else {
+                            this.request('POST', 'clients/create', data, (function createCallback(result) {
+                                if (result && result._id) {
+                                    this.showForm = false;
+                                    this.getClients();
+                                    alert('Cliente cadastrado com sucesso!');
+                                }
+                                else {
+                                    alert('Erro ao cadastrar, tente novamente mais tarde!');
+                                }
+                                this.sendingForm = false;
+                            }).bind(this));
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

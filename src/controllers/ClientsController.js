@@ -1,4 +1,6 @@
 const { jsonBody, response } = require('../helpers/ControllerHelpers');
+const readFile = require('fs').readFile;
+const patch = require('path');
 const ObjectID = require('mongodb').ObjectID;
 
 module.exports = class ClientsController {
@@ -60,10 +62,18 @@ module.exports = class ClientsController {
     }
 
     /* methods */
-    index() {
-        return response('json', {
-            response: 'Olá mundo'
-        }, 201);
+    async index() {
+        return new Promise(function callbackFunction(callback) {
+            readFile(patch.resolve(__dirname, '..', 'views', 'clients.html'), function callbackFile(err, resp) {
+                if (err) {
+                    callback(response(undefined, undefined, 500));
+                }
+                else {
+                    callback(resp.toString());
+                }
+            });
+
+        });
     }
 
     async create() {
@@ -122,6 +132,8 @@ module.exports = class ClientsController {
                 };
 
                 await this.collection.updateOne({ _id: id }, { $set: updatedClient });
+
+                updatedClient._id = idParam;
 
                 return response('json', updatedClient);
             }

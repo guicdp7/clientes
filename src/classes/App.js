@@ -56,9 +56,8 @@ module.exports = class App {
                                 res.end(JSON.stringify(response.data));
                                 return;
                             }
-                            else if (response.type === 'template') {
-                                // continuar
-                            }
+
+                            res.end(response.data);
                         }
                     }
                 }
